@@ -34,6 +34,7 @@ class AuthService {
 
       if (response.statusCode == 200) {
         var _token = response.body;
+        print(_token);
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('token', _token);
