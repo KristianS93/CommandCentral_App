@@ -3,6 +3,7 @@ import 'package:commandcentral_app/components/styled_textfield.dart';
 import 'package:commandcentral_app/pages/dashboard_page.dart';
 import 'package:commandcentral_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:commandcentral_app/components/custom_colors.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -16,6 +17,7 @@ class LoginPage extends StatelessWidget {
   void signIn(String username, String password) {
     print("Sign in button pressed");
     if (username == "user" && password == "1234") {
+      print("Correct");
       AuthService().login(username, password).then((_) => {
             Navigator.pushReplacement(
               _scaffoldKey.currentContext!,
@@ -37,7 +39,7 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.grey[300],
+      backgroundColor: loginBgColor,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -48,6 +50,7 @@ class LoginPage extends StatelessWidget {
               ),
               const Icon(
                 Icons.lock,
+                color: loginItemColor,
                 size: 100,
               ),
               const SizedBox(

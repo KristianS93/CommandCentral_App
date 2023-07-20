@@ -1,3 +1,4 @@
+import 'package:commandcentral_app/components/custom_colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -42,6 +43,7 @@ class GroceryListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: loginBgColor,
       body: FutureBuilder<Map<String, dynamic>>(
         future: fetchData(),
         builder: (context, snapshot) {

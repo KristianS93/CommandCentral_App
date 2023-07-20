@@ -1,3 +1,4 @@
+import 'package:commandcentral_app/components/custom_colors.dart';
 import 'package:flutter/material.dart';
 
 class MealPlannerPage extends StatelessWidget {
@@ -5,6 +6,8 @@ class MealPlannerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      backgroundColor: loginBgColor,
+    );
   }
 }

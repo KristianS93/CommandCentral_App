@@ -29,22 +29,23 @@ class AuthService {
     // Implement your actual login logic here
     // For simplicity, we will just set isLoggedIn to true.
     try {
-      var url = Uri.parse('http://10.0.2.2:8080/Authentication/1');
-      var response = await http.post(url);
+      // var url = Uri.parse('http://localhost:8080/Authentication/1');
+      // var response = await http.post(url);
 
-      if (response.statusCode == 200) {
-        var _token = response.body;
-        print(_token);
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('token', _token);
-        return true;
-      } else {
-        // Handle API response for failed login
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', false);
-        return false;
-      }
+      // if (response.statusCode == 200) {
+      // var _token = response.body;
+      var _token = "temp";
+      print(_token);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('token', _token);
+      return true;
+      // } else {
+      //   // Handle API response for failed login
+      //   SharedPreferences prefs = await SharedPreferences.getInstance();
+      //   await prefs.setBool('isLoggedIn', false);
+      //   return false;
+      // }
     } catch (e) {
       // Handle any errors that occurred during the API call
       print('Error: $e');
