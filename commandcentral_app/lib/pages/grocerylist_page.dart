@@ -169,7 +169,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     if (token != null) {
       try {
-        var url = Uri.parse('${baseMacApiUrl}GroceryList/1/Item/$itemId');
+        var url = Uri.parse('${baseMacApiUrl}GroceryListItem/$itemId');
         var headers = {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
