@@ -264,6 +264,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: appBgColor,
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _groceryListItems.isEmpty
