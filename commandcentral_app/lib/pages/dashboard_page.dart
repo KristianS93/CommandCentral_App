@@ -59,7 +59,7 @@ class _DashBoardPageState extends State<DashBoardPage> {
       case 2:
         return 'Meal Planner';
       default:
-        return 'Unknown';
+        return 'Dashboard';
     }
   }
 

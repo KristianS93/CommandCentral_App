@@ -1,83 +1,304 @@
-import 'package:commandcentral_app/components/custom_colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:commandcentral_app/components/custom_colors.dart';
+import 'package:flutter/gestures.dart';
+import 'package:commandcentral_app/components/api_constants.dart';
 
-class GroceryListPage extends StatelessWidget {
+import '../components/edit_grocery_item_page.dart';
+
+class GroceryListPage extends StatefulWidget {
   const GroceryListPage({Key? key}) : super(key: key);
 
-  Future<Map<String, dynamic>> fetchData() async {
+  @override
+  _GroceryListPageState createState() => _GroceryListPageState();
+}
+
+class _GroceryListPageState extends State<GroceryListPage> {
+  List<Map<String, dynamic>> _groceryListItems =
+      []; // Correct data type definition
+  bool _isLoading = false;
+  String? token; // Declare the token as an instance variable
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+
+    if (token != null) {
+      try {
+        var url = Uri.parse('${baseMacApiUrl}GroceryList/1'); // mac
+        var headers = {'Authorization': 'Bearer $token'};
+        var response = await http.get(url, headers: headers);
+        print("Status code ${response.statusCode}");
+        if (response.statusCode == 200) {
+          List<dynamic> groceryListItems =
+              jsonDecode(response.body)['groceryListItems'];
+          if (groceryListItems != null) {
+            setState(() {
+              _groceryListItems =
+                  List<Map<String, dynamic>>.from(groceryListItems);
+              _isLoading = false;
+            });
+          } else {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        } else {
+          print('Request failed with status: ${response.statusCode}');
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        print('Error: $e');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      print('Token is null or not available');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _addItem() async {
+    // Show a dialog to add a new item
+    String? itemName;
+    String? itemAmount;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Add New Item'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: InputDecoration(labelText: 'Item Name'),
+                onChanged: (value) => itemName = value,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: 'Item Amount'),
+                onChanged: (value) => itemAmount = value,
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (itemName != null && itemAmount != null) {
+                  try {
+                    final Map<String, String> headers = {
+                      'Authorization': 'Bearer $token',
+                      'Content-Type': 'application/json',
+                    };
+
+                    final Map<String, dynamic> requestBody = {
+                      'itemName': itemName,
+                      'itemAmount': itemAmount,
+                    };
+
+                    final http.Response response = await http.post(
+                      Uri.parse('${baseMacApiUrl}GroceryListItem/1'),
+                      headers: headers,
+                      body: jsonEncode(requestBody),
+                    );
+
+                    if (response.statusCode == 201) {
+                      // If the item was created successfully, add it to the list
+                      setState(() {
+                        _groceryListItems.add({
+                          'itemName': itemName,
+                          'itemAmount': itemAmount,
+                        });
+                      });
+                    } else {
+                      // Handle other status codes as needed
+                      print(
+                          'Failed to create item. Status code: ${response.statusCode}');
+                    }
+                  } catch (e) {
+                    // Handle any errors that occurred during the API call
+                    print('Error: $e');
+                  }
+
+                  Navigator.pop(context);
+                }
+              },
+              child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editItem(BuildContext context, Map<String, dynamic> item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditGroceryItemPage(itemData: item),
+      ),
+    );
+  }
+
+  Future<bool> _deleteItemFromApi(String itemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
     if (token != null) {
       try {
-        var url = Uri.parse('http://10.0.2.2:8080/GroceryList/1');
-        var headers = {'Authorization': 'Bearer $token'};
-        var response = await http.get(url, headers: headers);
-        print("Status code ${response.statusCode}");
-        if (response.statusCode == 200) {
-          // Parse the JSON response
-          var jsonData = jsonDecode(response.body);
-
-          // Handle the data as needed
-          print(jsonData);
-          return jsonDecode(response.body);
+        var url = Uri.parse('${baseMacApiUrl}GroceryList/1/Item/$itemId');
+        var headers = {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        };
+        var response = await http.delete(url, headers: headers);
+        print("Trying to delete ${itemId}");
+        if (response.statusCode == 204) {
+          return true;
         } else {
-          // Handle API response for failed request
           print('Request failed with status: ${response.statusCode}');
-          return {};
         }
       } catch (e) {
-        // Handle any errors that occurred during the API call
         print('Error: $e');
-        return {};
       }
     } else {
       print('Token is null or not available');
-      return {};
     }
+
+    return false;
+  }
+
+  Future<void> _deleteItem(int index) async {
+    // Show a dialog to confirm deletion
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Delete Item'),
+          content: Text('Are you sure you want to delete this item?'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                bool deleted = await _deleteItemFromApi(
+                  _groceryListItems[index]['groceryListItemId']
+                      .toString(), // Convert to String
+                );
+                if (deleted) {
+                  setState(() {
+                    _groceryListItems.removeAt(index);
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showPopupMenu(
+      BuildContext context, Map<String, dynamic> item, int index) {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox itemBox = context.findRenderObject() as RenderBox;
+
+    final relativeOffset =
+        itemBox.localToGlobal(Offset.zero, ancestor: overlay);
+
+    final double left = relativeOffset.dx;
+    final double top = relativeOffset.dy + itemBox.size.height;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(left, top, 0, 0),
+      items: [
+        PopupMenuItem(
+          child: Text('Edit'),
+          value: 'edit',
+        ),
+        PopupMenuItem(
+          child: Text('Delete'),
+          value: 'delete',
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit') {
+        _editItem(context, item);
+      } else if (value == 'delete') {
+        _deleteItem(index);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: loginBgColor,
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: fetchData(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // While the data is being fetched, show a loading indicator
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            // If there's an error in fetching the data, show an error message
-            return Center(child: Text('Error fetching data'));
-          } else {
-            // If data is available, build the ListView.builder with the data
-            Map<String, dynamic> data =
-                snapshot.data ?? {}; // Default to an empty map if data is null
-            return ListView.builder(
-              itemCount: data['groceryListItems'] != null
-                  ? data['groceryListItems'].length
-                  : 0,
-              itemBuilder: (context, index) {
-                // Check if the groceryListItems is not null and index is within range
-                if (data['groceryListItems'] != null &&
-                    index < data['groceryListItems'].length) {
-                  var item = data['groceryListItems'][index];
-                  return ListTile(
-                    title: Text(item['itemName']),
-                    subtitle: Text('Amount: ${item['itemAmount']}'),
-                  );
-                } else {
-                  // Return an empty Container if data is not available or out of range
-                  return Container();
-                }
-              },
-            );
-          }
-        },
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _groceryListItems.isEmpty
+              ? Center(
+                  child: Text(
+                  'No grocery items found.',
+                  style: TextStyle(fontSize: 20),
+                )) // Show message when the list is empty
+              : ListView.builder(
+                  itemCount: _groceryListItems.length,
+                  itemBuilder: (context, index) {
+                    var item = _groceryListItems[index];
+                    return Builder(
+                      builder: (context) => GestureDetector(
+                        onLongPress: () {
+                          _showPopupMenu(context, item, index);
+                        },
+                        child: ListTile(
+                          title: Text(
+                            item['itemName'],
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          subtitle: Text(
+                            'Amount: ${item['itemAmount']}',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addItem,
+        child: Icon(Icons.add),
+        backgroundColor: appItemColor,
       ),
     );
   }

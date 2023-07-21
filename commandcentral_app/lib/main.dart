@@ -1,3 +1,4 @@
+import 'package:commandcentral_app/components/eleated_button.dart';
 import 'package:commandcentral_app/pages/dashboard_page.dart';
 import 'package:commandcentral_app/pages/login_page.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        elevatedButtonTheme: customElevatedButtonTheme(context)
+      ),
       debugShowCheckedModeBanner: false,
       home: FutureBuilder<bool>(
         builder: (context, snapshot) {

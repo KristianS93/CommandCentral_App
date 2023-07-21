@@ -15,9 +15,7 @@ class LoginPage extends StatelessWidget {
 
   // sign in method
   void signIn(String username, String password) {
-    print("Sign in button pressed");
     if (username == "user" && password == "1234") {
-      print("Correct");
       AuthService().login(username, password).then((_) => {
             Navigator.pushReplacement(
               _scaffoldKey.currentContext!,

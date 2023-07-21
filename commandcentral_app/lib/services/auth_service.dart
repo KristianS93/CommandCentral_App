@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:commandcentral_app/components/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -29,23 +29,22 @@ class AuthService {
     // Implement your actual login logic here
     // For simplicity, we will just set isLoggedIn to true.
     try {
-      // var url = Uri.parse('http://localhost:8080/Authentication/1');
-      // var response = await http.post(url);
+      var url = Uri.parse('${baseMacApiUrl}Authentication/1');
+      var response = await http.post(url);
 
-      // if (response.statusCode == 200) {
-      // var _token = response.body;
-      var _token = "temp";
-      print(_token);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('token', _token);
-      return true;
-      // } else {
-      //   // Handle API response for failed login
-      //   SharedPreferences prefs = await SharedPreferences.getInstance();
-      //   await prefs.setBool('isLoggedIn', false);
-      //   return false;
-      // }
+      if (response.statusCode == 200) {
+        var _token = response.body;
+        print(_token);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('token', _token);
+        return true;
+      } else {
+        // Handle API response for failed login
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', false);
+        return false;
+      }
     } catch (e) {
       // Handle any errors that occurred during the API call
       print('Error: $e');
