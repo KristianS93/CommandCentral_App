@@ -10,7 +10,7 @@ V1: Only the Grocerylist functionality
 ## IOS & Android
 ### V1
 **Login Screen**
-<img width="470" alt="image" src="https://github.com/KristianS93/CommandCentral_App/assets/82061735/1f95c95e-08be-47d9-a455-8b390c89b7fc">
+<img width="270" alt="image" src="https://github.com/KristianS93/CommandCentral_App/assets/82061735/1f95c95e-08be-47d9-a455-8b390c89b7fc">
 **Dashboard**
 <img width="467" alt="image" src="https://github.com/KristianS93/CommandCentral_App/assets/82061735/a609db82-226a-4cdf-aad5-95ac3ef1c564">
 **Grocery List - Overview**
