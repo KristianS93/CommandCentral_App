@@ -1,3 +1,4 @@
+import 'package:commandcentral_app/model/grocery_data.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -6,7 +7,7 @@ import 'package:commandcentral_app/components/custom_colors.dart';
 import 'package:flutter/gestures.dart';
 import 'package:commandcentral_app/components/api_constants.dart';
 
-import '../components/edit_grocery_item_page.dart';
+import '../components/edit_grocery_item.dart';
 
 class GroceryListPage extends StatefulWidget {
   const GroceryListPage({Key? key}) : super(key: key);
@@ -16,10 +17,9 @@ class GroceryListPage extends StatefulWidget {
 }
 
 class _GroceryListPageState extends State<GroceryListPage> {
-  List<Map<String, dynamic>> _groceryListItems =
-      []; // Correct data type definition
   bool _isLoading = false;
   String? token; // Declare the token as an instance variable
+  GlobalKey listViewKey = GlobalKey();
 
   @override
   void initState() {
@@ -37,7 +37,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     if (token != null) {
       try {
-        var url = Uri.parse('${baseMacApiUrl}GroceryList/1'); // mac
+        var url = Uri.parse(getGroceryList);
         var headers = {'Authorization': 'Bearer $token'};
         var response = await http.get(url, headers: headers);
         print("Status code ${response.statusCode}");
@@ -46,7 +46,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
               jsonDecode(response.body)['groceryListItems'];
           if (groceryListItems != null) {
             setState(() {
-              _groceryListItems =
+              GroceryData.groceryListItems =
                   List<Map<String, dynamic>>.from(groceryListItems);
               _isLoading = false;
             });
@@ -120,7 +120,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
                     };
 
                     final http.Response response = await http.post(
-                      Uri.parse('${baseMacApiUrl}GroceryListItem/1'),
+                      Uri.parse(createGroceryItemUrl),
                       headers: headers,
                       body: jsonEncode(requestBody),
                     );
@@ -128,7 +128,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
                     if (response.statusCode == 201) {
                       // If the item was created successfully, add it to the list
                       setState(() {
-                        _groceryListItems.add({
+                        GroceryData.groceryListItems.add({
                           'itemName': itemName,
                           'itemAmount': itemAmount,
                         });
@@ -154,13 +154,19 @@ class _GroceryListPageState extends State<GroceryListPage> {
     );
   }
 
-  void _editItem(BuildContext context, Map<String, dynamic> item) {
-    Navigator.push(
+  void _editItem(BuildContext context, Map<String, dynamic> item) async {
+    var result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditGroceryItemPage(itemData: item),
       ),
     );
+
+    // Check if result is true, indicating a successful update
+    if (result == true) {
+      // Perform the fetch data again to update the list with the edited item
+      await _fetchData();
+    }
   }
 
   Future<bool> _deleteItemFromApi(String itemId) async {
@@ -169,7 +175,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     if (token != null) {
       try {
-        var url = Uri.parse('${baseMacApiUrl}GroceryListItem/$itemId');
+        var url = Uri.parse(deleteGroceryItemUrl+itemId);
         var headers = {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -209,12 +215,12 @@ class _GroceryListPageState extends State<GroceryListPage> {
             ElevatedButton(
               onPressed: () async {
                 bool deleted = await _deleteItemFromApi(
-                  _groceryListItems[index]['groceryListItemId']
+                  GroceryData.groceryListItems[index]['groceryListItemId']
                       .toString(), // Convert to String
                 );
                 if (deleted) {
                   setState(() {
-                    _groceryListItems.removeAt(index);
+                    GroceryData.groceryListItems.removeAt(index);
                   });
                 }
                 Navigator.pop(context);
@@ -267,16 +273,16 @@ class _GroceryListPageState extends State<GroceryListPage> {
       backgroundColor: appBgColor,
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _groceryListItems.isEmpty
+          : GroceryData.groceryListItems.isEmpty
               ? Center(
                   child: Text(
                   'No grocery items found.',
                   style: TextStyle(fontSize: 20),
                 )) // Show message when the list is empty
               : ListView.builder(
-                  itemCount: _groceryListItems.length,
+                  itemCount: GroceryData.groceryListItems.length,
                   itemBuilder: (context, index) {
-                    var item = _groceryListItems[index];
+                    var item = GroceryData.groceryListItems[index];
                     return Builder(
                       builder: (context) => GestureDetector(
                         onLongPress: () {
