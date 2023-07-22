@@ -37,7 +37,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     if (token != null) {
       try {
-        var url = Uri.parse('${baseMacApiUrl}GroceryList/'); // mac
+        var url = Uri.parse(getGroceryList);
         var headers = {'Authorization': 'Bearer $token'};
         var response = await http.get(url, headers: headers);
         print("Status code ${response.statusCode}");
@@ -120,7 +120,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
                     };
 
                     final http.Response response = await http.post(
-                      Uri.parse('${baseMacApiUrl}GroceryList/Item'),
+                      Uri.parse(createGroceryItemUrl),
                       headers: headers,
                       body: jsonEncode(requestBody),
                     );
@@ -154,21 +154,20 @@ class _GroceryListPageState extends State<GroceryListPage> {
     );
   }
 
-void _editItem(BuildContext context, Map<String, dynamic> item) async {
-  var result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => EditGroceryItemPage(itemData: item),
-    ),
-  );
+  void _editItem(BuildContext context, Map<String, dynamic> item) async {
+    var result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditGroceryItemPage(itemData: item),
+      ),
+    );
 
-  // Check if result is true, indicating a successful update
-  if (result == true) {
-    // Perform the fetch data again to update the list with the edited item
-    await _fetchData();
+    // Check if result is true, indicating a successful update
+    if (result == true) {
+      // Perform the fetch data again to update the list with the edited item
+      await _fetchData();
+    }
   }
-}
-
 
   Future<bool> _deleteItemFromApi(String itemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -176,7 +175,7 @@ void _editItem(BuildContext context, Map<String, dynamic> item) async {
 
     if (token != null) {
       try {
-        var url = Uri.parse('${baseMacApiUrl}GroceryList/Item/$itemId');
+        var url = Uri.parse(deleteGroceryItemUrl+itemId);
         var headers = {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -234,7 +233,7 @@ void _editItem(BuildContext context, Map<String, dynamic> item) async {
     );
   }
 
- void _showPopupMenu(
+  void _showPopupMenu(
       BuildContext context, Map<String, dynamic> item, int index) {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
@@ -267,8 +266,6 @@ void _editItem(BuildContext context, Map<String, dynamic> item) async {
       }
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {

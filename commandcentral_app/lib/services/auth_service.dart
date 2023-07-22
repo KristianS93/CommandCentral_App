@@ -29,7 +29,7 @@ class AuthService {
     // Implement your actual login logic here
     // For simplicity, we will just set isLoggedIn to true.
     try {
-      var url = Uri.parse('${baseMacApiUrl}Authentication/1');
+      var url = Uri.parse('${baseApiUrl}Authentication/1');
       var response = await http.post(url);
 
       if (response.statusCode == 200) {
