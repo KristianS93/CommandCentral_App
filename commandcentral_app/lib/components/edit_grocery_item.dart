@@ -21,18 +21,22 @@ class _EditGroceryItemPageState extends State<EditGroceryItemPage> {
   TextEditingController itemAmountController = TextEditingController();
 
   Future<void> _updateItem() async {
-    String newItemName = itemNameController.text;
-    String newItemAmount = itemAmountController.text;
-    int? newItemAmountAsInt;
+  String newItemName = itemNameController.text;
+  String newItemAmount = itemAmountController.text;
+  int? newItemAmountAsInt;
 
-    // Validate the input for item amount
-    if (newItemAmount.isNotEmpty) {
-      newItemAmountAsInt = int.tryParse(newItemAmount);
-      if (newItemAmountAsInt == null) {
-        _showErrorSnackbar('Invalid input for Item Amount');
-        return;
-      }
+  // Validate the input for item amount
+  if (newItemAmount.isNotEmpty) {
+    newItemAmountAsInt = int.tryParse(newItemAmount);
+    if (newItemAmountAsInt == null) {
+      // Show an error snackbar if the input is not a valid integer
+      _showErrorSnackbar('Invalid input for Item Amount');
+      return;
     }
+  } else {
+    // If the input is empty, set newItemAmountAsInt to null
+    newItemAmountAsInt = null;
+  }
 
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();

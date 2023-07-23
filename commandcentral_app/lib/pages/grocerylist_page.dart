@@ -175,7 +175,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     if (token != null) {
       try {
-        var url = Uri.parse(deleteGroceryItemUrl+itemId);
+        var url = Uri.parse(deleteGroceryItemUrl + itemId);
         var headers = {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -233,80 +233,148 @@ class _GroceryListPageState extends State<GroceryListPage> {
     );
   }
 
-  void _showPopupMenu(
-      BuildContext context, Map<String, dynamic> item, int index) {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-    final RenderBox itemBox = context.findRenderObject() as RenderBox;
+  // void _showPopupMenu(
+  //     BuildContext context, Map<String, dynamic> item, int index) {
+  //   final RenderBox overlay =
+  //       Overlay.of(context).context.findRenderObject() as RenderBox;
+  //   final RenderBox itemBox = context.findRenderObject() as RenderBox;
 
-    final relativeOffset =
-        itemBox.localToGlobal(Offset.zero, ancestor: overlay);
+  //   final relativeOffset =
+  //       itemBox.localToGlobal(Offset.zero, ancestor: overlay);
 
-    final double left = relativeOffset.dx;
-    final double top = relativeOffset.dy + itemBox.size.height;
+  //   final double left = relativeOffset.dx;
+  //   final double top = relativeOffset.dy + itemBox.size.height;
 
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(left, top, 0, 0),
-      items: [
-        PopupMenuItem(
-          child: Text('Edit'),
-          value: 'edit',
-        ),
-        PopupMenuItem(
-          child: Text('Delete'),
-          value: 'delete',
-        ),
-      ],
-    ).then((value) {
-      if (value == 'edit') {
-        _editItem(context, item);
-      } else if (value == 'delete') {
-        _deleteItem(index);
-      }
-    });
-  }
+  //   showMenu(
+  //     context: context,
+  //     position: RelativeRect.fromLTRB(left, top, 0, 0),
+  //     items: [
+  //       PopupMenuItem(
+  //         child: Text('Edit'),
+  //         value: 'edit',
+  //       ),
+  //       PopupMenuItem(
+  //         child: Text('Delete'),
+  //         value: 'delete',
+  //       ),
+  //     ],
+  //   ).then((value) {
+  //     if (value == 'edit') {
+  //       _editItem(context, item);
+  //     } else if (value == 'delete') {
+  //       _deleteItem(index);
+  //     }
+  //   });
+  // }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: appBgColor,
-      body: _isLoading
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: appBgColor,
+    body: RefreshIndicator(
+      onRefresh: _fetchData, // Method to be called when refreshing
+      child: _isLoading
           ? Center(child: CircularProgressIndicator())
           : GroceryData.groceryListItems.isEmpty
               ? Center(
                   child: Text(
-                  'No grocery items found.',
-                  style: TextStyle(fontSize: 20),
-                )) // Show message when the list is empty
-              : ListView.builder(
-                  itemCount: GroceryData.groceryListItems.length,
-                  itemBuilder: (context, index) {
-                    var item = GroceryData.groceryListItems[index];
-                    return Builder(
-                      builder: (context) => GestureDetector(
-                        onLongPress: () {
-                          _showPopupMenu(context, item, index);
-                        },
-                        child: ListTile(
-                          title: Text(
-                            item['itemName'],
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          subtitle: Text(
-                            'Amount: ${item['itemAmount']}',
-                            style: TextStyle(fontSize: 16),
+                    'No grocery items found.',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ) // Show message when the list is empty
+              : Builder( // Use Builder to access the context
+                  builder: (context) => ListView.builder(
+                    itemCount: GroceryData.groceryListItems.length,
+                    itemBuilder: (context, index) {
+                      var item = GroceryData.groceryListItems[index];
+                      return Dismissible(
+                        key: Key(item['groceryListItemId'].toString()),
+                        direction: DismissDirection.endToStart, // Changed the direction here
+                        background: Container(
+                          color: Colors.red,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end, // Align the icon to the right
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 16.0),
+                                child: Icon(Icons.delete),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    );
-                  },
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text('Confirm Deletion'),
+                                content: Text('Are you sure you want to delete this item?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        onDismissed: (direction) async {
+                          bool deleted = await _deleteItemFromApi(item['groceryListItemId'].toString());
+                          if (deleted) {
+                            setState(() {
+                              GroceryData.groceryListItems.removeAt(index);
+                            });
+                          }
+                        },
+                        child: GestureDetector( // Use GestureDetector for tap and long-press behavior
+                          onTap: () {}, // Add any tap behavior here if needed
+                          onLongPress: () => _editItem(context, item),
+                          child: Card(
+                            color: Colors.white, // White background for the card
+                            elevation:
+                                0.0, // Set elevation to 0.0 to remove the shadow
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(12.0), // Rounded corners
+                            ),
+                            child: ExpansionTile(
+                              tilePadding: EdgeInsets.symmetric(horizontal: 16.0),
+                              title: Text(
+                                item['itemName'],
+                                style: TextStyle(fontSize: 18, color: Colors.black), // Set text color to black
+                              ),
+                              subtitle: Text(
+                                'Amount: ${item['itemAmount']}',
+                                style: TextStyle(fontSize: 16, color: Colors.black), // Set text color to black
+                              ),
+                              trailing: Container(width: 0), // Remove the arrow icon
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Edit icon removed, long press for editing
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addItem,
-        child: Icon(Icons.add),
-        backgroundColor: appItemColor,
-      ),
-    );
-  }
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _addItem,
+      child: Icon(Icons.add),
+      backgroundColor: appItemColor,
+    ),
+  );
+}
+
 }
