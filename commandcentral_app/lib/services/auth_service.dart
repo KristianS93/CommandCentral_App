@@ -29,9 +29,21 @@ class AuthService {
     // Implement your actual login logic here
     // For simplicity, we will just set isLoggedIn to true.
     try {
-      var url = Uri.parse('${baseApiUrl}Authentication/1');
-      var response = await http.post(url);
+      final headers = {
+        'accept': 'text/plain',
+        'Content-Type': 'application/json',
+      };
+      final body = jsonEncode({
+        "username": username,
+        "password": password,
+      });
 
+      final response = await http.post(
+        Uri.parse(getToken),
+        headers: headers,
+        body: body,
+      );
+      print(response.statusCode);
       if (response.statusCode == 200) {
         var _token = response.body;
         print(_token);

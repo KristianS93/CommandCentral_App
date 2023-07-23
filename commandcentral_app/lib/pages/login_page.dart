@@ -13,24 +13,31 @@ class LoginPage extends StatelessWidget {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // sign in method
-  void signIn(String username, String password) {
-    if (username == "user" && password == "1234") {
-      AuthService().login(username, password).then((_) => {
-            Navigator.pushReplacement(
-              _scaffoldKey.currentContext!,
-              MaterialPageRoute(builder: (context) => const DashBoardPage()),
-            )
-          });
+  void signIn(String username, String password) async {
+    print("in sign in");
+    bool success = await AuthService().login(username, password);
+
+    if (success) {
+      Navigator.pushReplacement(
+        _scaffoldKey.currentContext!,
+        MaterialPageRoute(builder: (context) => const DashBoardPage()),
+      );
     } else {
-      ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            'Invalid login details!',
-            textAlign: TextAlign.center,
-          ),
-          duration: Duration(seconds: 2)));
+      showSnackBarWithText('Invalid login details!', Colors.red);
     }
+  }
+
+  void showSnackBarWithText(String text, Color backgroundColor) {
+    ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+      SnackBar(
+        backgroundColor: backgroundColor,
+        content: Text(
+          text,
+          textAlign: TextAlign.center,
+        ),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
