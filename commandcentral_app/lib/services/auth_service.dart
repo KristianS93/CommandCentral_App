@@ -28,6 +28,8 @@ class AuthService {
   Future<bool> login(String username, String password) async {
     // Implement your actual login logic here
     // For simplicity, we will just set isLoggedIn to true.
+    print(username);
+    print(password);
     try {
       final headers = {
         'accept': 'text/plain',
@@ -37,7 +39,6 @@ class AuthService {
         "username": username,
         "password": password,
       });
-
       final response = await http.post(
         Uri.parse(getToken),
         headers: headers,
