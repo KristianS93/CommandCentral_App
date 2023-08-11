@@ -22,7 +22,7 @@ jobs:
           node-version: '18.x'
 
       - name: npm install, build, and test
-        working-directory: ./commandcentral_app
+        working-directory: ./webapp
         run: |
           npm install
           npm run build --if-present
